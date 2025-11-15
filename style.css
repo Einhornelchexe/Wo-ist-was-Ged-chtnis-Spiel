@@ -345,8 +345,14 @@ button.active {
 .memory-grid {
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   justify-items: center;
+}
+
+@media (max-width: 720px) {
+  .memory-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .memory-card {
