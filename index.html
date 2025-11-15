@@ -20,6 +20,26 @@
 
     <section class="panel" id="controls" aria-labelledby="steuerung">
       <h2 id="steuerung">Steuerung</h2>
+      <div class="settings-grid">
+        <label class="setting" for="itemCount">
+          <span>Anzahl der Gegenstände</span>
+          <select id="itemCount">
+            <option value="3">3 Gegenstände</option>
+            <option value="4" selected>4 Gegenstände</option>
+            <option value="5">5 Gegenstände</option>
+            <option value="6">6 Gegenstände</option>
+          </select>
+        </label>
+        <label class="setting" for="memorizeDuration">
+          <span>Bedenkzeit</span>
+          <select id="memorizeDuration">
+            <option value="10">10 Sekunden</option>
+            <option value="15" selected>15 Sekunden</option>
+            <option value="20">20 Sekunden</option>
+            <option value="30">30 Sekunden</option>
+          </select>
+        </label>
+      </div>
       <div class="control-buttons">
         <button id="startMemorize" type="button" disabled>Merken starten</button>
         <button id="startRecall" type="button" disabled>Zur Erinnerung wechseln</button>

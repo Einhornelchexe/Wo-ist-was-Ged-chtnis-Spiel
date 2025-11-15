@@ -4,11 +4,12 @@ const rooms = [
     rows: 3,
     cols: 4,
     items: [
-      { name: "Schlüssel", target: { row: 0, col: 1 } },
-      { name: "Fernbedienung", target: { row: 1, col: 3 } },
-      { name: "Brille", target: { row: 2, col: 0 } },
-      { name: "Buch", target: { row: 1, col: 1 } },
-      { name: "Handy", target: { row: 0, col: 3 } }
+      { name: "Schlüssel", icon: "Bilder/wohnzimmer_icon_schluessel_clean.png" },
+      { name: "Fernbedienung", icon: "Bilder/wohnzimmer_icon_fernbedienung_clean.png" },
+      { name: "Brille", icon: "Bilder/wohnzimmer_icon_brille_clean.png" },
+      { name: "Buch", icon: "Bilder/wohnzimmer_icon_buch_clean.png" },
+      { name: "Handy", icon: "Bilder/wohnzimmer_icon_handy_clean.png" },
+      { name: "Sofa", icon: "Bilder/wohnzimmer_icon_sofa_clean.png" }
     ]
   },
   {
@@ -16,16 +17,20 @@ const rooms = [
     rows: 3,
     cols: 4,
     items: [
-      { name: "Tasse", target: { row: 0, col: 0 } },
-      { name: "Pfanne", target: { row: 2, col: 3 } },
-      { name: "Messer", target: { row: 1, col: 2 } },
-      { name: "Löffel", target: { row: 2, col: 1 } },
-      { name: "Salzstreuer", target: { row: 0, col: 2 } }
+      { name: "Tasse", icon: "Bilder/kueche_icon_tasse_clean.png" },
+      { name: "Pfanne", icon: "Bilder/kueche_icon_pfanne_clean.png" },
+      { name: "Messer", icon: "Bilder/kueche_icon_messer_clean.png" },
+      { name: "Löffel", icon: "Bilder/kueche_icon_loeffel_clean.png" },
+      { name: "Salzstreuer", icon: "Bilder/kueche_icon_salzstreuer_clean.png" },
+      { name: "Teller", icon: "Bilder/kueche_icon_teller_clean.png" }
     ]
   }
 ];
 
-const MEMORIZE_DURATION = 15;
+const ITEM_COUNT_MIN = 3;
+const ITEM_COUNT_MAX = 6;
+const DEFAULT_ITEM_COUNT = 4;
+const DEFAULT_MEMORIZE_DURATION = 15;
 
 let phase = "idle";
 let selectedRoomIndex = null;
@@ -33,9 +38,13 @@ let placements = {};
 let cellAssignments = {};
 let activeItem = null;
 let timerInterval = null;
-let timeLeft = MEMORIZE_DURATION;
+let timeLeft = DEFAULT_MEMORIZE_DURATION;
 let cellElements = new Map();
 let itemButtons = new Map();
+let roundItems = [];
+let roundTargets = {};
+let selectedItemCount = DEFAULT_ITEM_COUNT;
+let memorizeDuration = DEFAULT_MEMORIZE_DURATION;
 
 const roomButtonsContainer = document.getElementById("roomButtons");
 const startMemorizeButton = document.getElementById("startMemorize");
@@ -45,12 +54,16 @@ const gridElement = document.getElementById("grid");
 const itemsContainer = document.getElementById("items");
 const messageElement = document.getElementById("message");
 const timerElement = document.getElementById("timer");
+const itemCountSelect = document.getElementById("itemCount");
+const memorizeDurationSelect = document.getElementById("memorizeDuration");
 
 function init() {
   buildRoomButtons();
   startMemorizeButton.addEventListener("click", handleStartMemorize);
   startRecallButton.addEventListener("click", startRecall);
   resetButton.addEventListener("click", resetGame);
+  itemCountSelect.addEventListener("change", handleItemCountChange);
+  memorizeDurationSelect.addEventListener("change", handleMemorizeDurationChange);
   updateControls();
 }
 
@@ -93,9 +106,10 @@ function handleStartMemorize() {
 }
 
 function startMemorize(roomIndex) {
-  phase = "memorize";
-  const room = rooms[roomIndex];
   resetRoundState();
+  const room = rooms[roomIndex];
+  prepareRound(room);
+  phase = "memorize";
   buildGrid(room, true);
   messageElement.textContent = "Merke dir die Positionen der Gegenstände.";
   startTimer();
@@ -103,9 +117,31 @@ function startMemorize(roomIndex) {
   startRecallButton.disabled = false;
 }
 
+function prepareRound(room) {
+  const maxAllowed = Math.min(room.items.length, ITEM_COUNT_MAX);
+  if (selectedItemCount > maxAllowed) {
+    selectedItemCount = maxAllowed;
+    itemCountSelect.value = String(maxAllowed);
+  }
+  const shuffledItems = shuffleArray([...room.items]);
+  roundItems = shuffledItems.slice(0, selectedItemCount);
+
+  const allCells = [];
+  for (let row = 0; row < room.rows; row += 1) {
+    for (let col = 0; col < room.cols; col += 1) {
+      allCells.push({ row, col });
+    }
+  }
+  const shuffledCells = shuffleArray(allCells);
+  roundTargets = {};
+  shuffledCells.slice(0, roundItems.length).forEach((cell, index) => {
+    roundTargets[roundItems[index].name] = cell;
+  });
+}
+
 function startTimer() {
   clearInterval(timerInterval);
-  timeLeft = MEMORIZE_DURATION;
+  timeLeft = memorizeDuration;
   timerElement.textContent = `Merken: ${timeLeft} Sekunden verbleiben.`;
   timerInterval = setInterval(() => {
     timeLeft -= 1;
@@ -130,7 +166,7 @@ function startRecall() {
   timerElement.textContent = "Lege die Gegenstände wieder zurück.";
   const room = rooms[selectedRoomIndex];
   buildGrid(room, false);
-  buildItemButtons(room.items);
+  buildItemButtons(roundItems);
   messageElement.textContent = "Wähle einen Gegenstand und klicke dann auf ein Feld.";
   startRecallButton.disabled = true;
 }
@@ -155,11 +191,9 @@ function buildGrid(room, showTargets) {
         cell.classList.add("recall");
       }
 
-      const itemAtCell = room.items.find(
-        (item) => item.target.row === row && item.target.col === col
-      );
-      if (showTargets && itemAtCell) {
-        cell.textContent = itemAtCell.name;
+      const targetItem = getItemByPosition(row, col);
+      if (showTargets && targetItem) {
+        renderIconInCell(cell, targetItem);
       }
 
       if (phase === "recall") {
@@ -180,7 +214,19 @@ function buildItemButtons(items) {
   items.forEach((item) => {
     const button = document.createElement("button");
     button.type = "button";
-    button.textContent = item.name;
+    button.setAttribute("aria-label", item.name);
+
+    const icon = document.createElement("img");
+    icon.src = item.icon;
+    icon.alt = item.name;
+    icon.classList.add("item-icon");
+
+    const label = document.createElement("span");
+    label.textContent = item.name;
+
+    button.appendChild(icon);
+    button.appendChild(label);
+
     button.addEventListener("click", () => selectItem(item.name));
     itemsContainer.appendChild(button);
     itemButtons.set(item.name, button);
@@ -221,17 +267,19 @@ function handleCellClick(row, col) {
   const key = `${row},${col}`;
   const cell = cellElements.get(key);
 
-  // remove previous assignment for this item
+  if (!cell) {
+    return;
+  }
+
   if (placements[activeItem]) {
     const previousKey = `${placements[activeItem].row},${placements[activeItem].col}`;
     const previousCell = cellElements.get(previousKey);
     if (previousCell) {
-      previousCell.textContent = "";
+      previousCell.innerHTML = "";
     }
     delete cellAssignments[previousKey];
   }
 
-  // if another item was in this cell, remove it
   if (cellAssignments[key] && cellAssignments[key] !== activeItem) {
     const otherItem = cellAssignments[key];
     delete placements[otherItem];
@@ -239,14 +287,17 @@ function handleCellClick(row, col) {
 
   placements[activeItem] = { row, col };
   cellAssignments[key] = activeItem;
-  cell.textContent = activeItem;
+  const itemData = getRoundItem(activeItem);
+  if (itemData) {
+    renderIconInCell(cell, itemData);
+  }
 
   activeItem = null;
   updateItemSelection();
   messageElement.textContent = "Gegenstand platziert. Wähle den nächsten Gegenstand.";
 
   const placedCount = Object.keys(placements).length;
-  const totalItems = rooms[selectedRoomIndex].items.length;
+  const totalItems = roundItems.length;
   if (placedCount === totalItems) {
     evaluate();
   }
@@ -257,22 +308,29 @@ function evaluate() {
   const room = rooms[selectedRoomIndex];
   let correctCount = 0;
 
-  // Clear state for result view
   itemButtons.forEach((button) => button.setAttribute("disabled", "true"));
   cellElements.forEach((cell) => {
     cell.disabled = true;
   });
 
-  room.items.forEach((item) => {
-    const targetKey = `${item.target.row},${item.target.col}`;
+  roundItems.forEach((item) => {
+    const target = roundTargets[item.name];
+    if (!target) {
+      return;
+    }
+    const targetKey = `${target.row},${target.col}`;
     const targetCell = cellElements.get(targetKey);
-    targetCell.classList.remove("memorize", "recall");
-    targetCell.textContent = item.name;
+    if (targetCell) {
+      targetCell.classList.remove("memorize", "recall");
+      renderIconInCell(targetCell, item);
+    }
 
     const userPlacement = placements[item.name];
-    if (userPlacement && userPlacement.row === item.target.row && userPlacement.col === item.target.col) {
+    if (userPlacement && userPlacement.row === target.row && userPlacement.col === target.col) {
       correctCount += 1;
-      targetCell.classList.add("correct");
+      if (targetCell) {
+        targetCell.classList.add("correct");
+      }
     } else if (userPlacement) {
       const userKey = `${userPlacement.row},${userPlacement.col}`;
       const userCell = cellElements.get(userKey);
@@ -280,14 +338,18 @@ function evaluate() {
         userCell.classList.add("wrong");
         userCell.disabled = true;
       }
-      targetCell.classList.add("correct");
-    } else {
+      if (targetCell) {
+        targetCell.classList.add("correct");
+      }
+    } else if (targetCell) {
       targetCell.classList.add("correct");
     }
-    targetCell.disabled = true;
+    if (targetCell) {
+      targetCell.disabled = true;
+    }
   });
 
-  const total = room.items.length;
+  const total = roundItems.length;
   messageElement.textContent = `Du hast ${correctCount} von ${total} Gegenständen richtig platziert.`;
   timerElement.textContent = "Runde beendet.";
   startMemorizeButton.disabled = selectedRoomIndex === null;
@@ -302,6 +364,8 @@ function resetRoundState() {
   activeItem = null;
   cellElements = new Map();
   itemButtons = new Map();
+  roundItems = [];
+  roundTargets = {};
   itemsContainer.innerHTML = "";
   gridElement.innerHTML = "";
   timerElement.textContent = "";
@@ -316,6 +380,8 @@ function resetGame() {
   activeItem = null;
   cellElements = new Map();
   itemButtons = new Map();
+  roundItems = [];
+  roundTargets = {};
   gridElement.innerHTML = "";
   itemsContainer.innerHTML = "";
   timerElement.textContent = "";
@@ -330,6 +396,50 @@ function resetGame() {
 function updateControls() {
   startMemorizeButton.disabled = selectedRoomIndex === null;
   startRecallButton.disabled = true;
+}
+
+function handleItemCountChange(event) {
+  const newValue = Number(event.target.value);
+  if (Number.isNaN(newValue)) {
+    return;
+  }
+  selectedItemCount = Math.max(ITEM_COUNT_MIN, Math.min(ITEM_COUNT_MAX, newValue));
+}
+
+function handleMemorizeDurationChange(event) {
+  const newValue = Number(event.target.value);
+  if (Number.isNaN(newValue)) {
+    return;
+  }
+  memorizeDuration = Math.max(5, newValue);
+}
+
+function getItemByPosition(row, col) {
+  return roundItems.find((item) => {
+    const target = roundTargets[item.name];
+    return target && target.row === row && target.col === col;
+  });
+}
+
+function getRoundItem(name) {
+  return roundItems.find((item) => item.name === name);
+}
+
+function renderIconInCell(cell, item) {
+  cell.innerHTML = "";
+  const icon = document.createElement("img");
+  icon.src = item.icon;
+  icon.alt = item.name;
+  icon.classList.add("item-icon");
+  cell.appendChild(icon);
+}
+
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
 }
 
 init();
