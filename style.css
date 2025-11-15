@@ -319,18 +319,21 @@ button.active {
 
 .memory-grid {
   display: grid;
-  gap: 12px;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   justify-items: center;
 }
 
 .memory-card {
-  width: 120px;
-  height: 140px;
+  width: min(130px, 100%);
+  aspect-ratio: 5 / 6;
+  height: auto;
   perspective: 800px;
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
+  display: block;
 }
 
 .memory-card-inner {
