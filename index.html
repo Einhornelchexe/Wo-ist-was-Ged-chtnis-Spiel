@@ -67,48 +67,56 @@
     </section>
 
     <section id="memoryGame" class="game-section" role="tabpanel" aria-labelledby="tab-memory" hidden>
-      <div class="panel">
-        <h2 id="memoryTitle">Memo-Match</h2>
-        <p class="subtitle">Finde die Paare – Solo oder im Duell!</p>
+      <div class="panel memory-panel">
+        <div class="memory-layout">
+          <div class="memory-sidebar">
+            <div class="memory-heading">
+              <h2 id="memoryTitle">Memo-Match</h2>
+              <p class="subtitle">Finde die Paare – Solo oder im Duell!</p>
+            </div>
 
-        <div class="memory-settings">
-          <div class="memory-mode" role="group" aria-labelledby="memoryModeLabel">
-            <span id="memoryModeLabel">Modus</span>
-            <label>
-              <input type="radio" name="memoryMode" value="solo" checked>
-              Solo
-            </label>
-            <label>
-              <input type="radio" name="memoryMode" value="duel">
-              1 vs 1
-            </label>
+            <div class="memory-settings">
+              <div class="memory-mode" role="group" aria-labelledby="memoryModeLabel">
+                <span id="memoryModeLabel">Modus</span>
+                <label>
+                  <input type="radio" name="memoryMode" value="solo" checked>
+                  Solo
+                </label>
+                <label>
+                  <input type="radio" name="memoryMode" value="duel">
+                  1 vs 1
+                </label>
+              </div>
+
+              <div class="memory-players">
+                <label for="playerOneName">Spieler 1</label>
+                <input id="playerOneName" type="text" placeholder="Name Spieler 1" value="Spieler 1">
+
+                <label for="playerTwoName" class="player-two">Spieler 2</label>
+                <input id="playerTwoName" type="text" placeholder="Name Spieler 2" value="Spieler 2" class="player-two">
+              </div>
+
+              <label class="memory-pairs" for="memoryPairs">
+                <span>Paare</span>
+                <input id="memoryPairs" type="range" min="4" max="12" value="6">
+                <output id="memoryPairValue" for="memoryPairs">6 Paare</output>
+              </label>
+            </div>
+
+            <div class="control-buttons">
+              <button id="memoryStart" type="button">Start</button>
+              <button id="memoryRestart" type="button" class="secondary">Neustart</button>
+            </div>
+
+            <div class="memory-status" id="memoryStatus" aria-live="polite">Stelle den Modus ein und starte das Spiel.</div>
+
+            <div id="memoryScoreboard" class="memory-scoreboard" aria-live="polite"></div>
           </div>
 
-          <div class="memory-players">
-            <label for="playerOneName">Spieler 1</label>
-            <input id="playerOneName" type="text" placeholder="Name Spieler 1" value="Spieler 1">
-
-            <label for="playerTwoName" class="player-two">Spieler 2</label>
-            <input id="playerTwoName" type="text" placeholder="Name Spieler 2" value="Spieler 2" class="player-two">
+          <div class="memory-playfield" aria-live="polite">
+            <div id="memoryGrid" class="memory-grid" aria-live="polite" aria-label="Memo Spielfeld"></div>
           </div>
-
-          <label class="memory-pairs" for="memoryPairs">
-            <span>Paare</span>
-            <input id="memoryPairs" type="range" min="4" max="12" value="6">
-            <output id="memoryPairValue" for="memoryPairs">6 Paare</output>
-          </label>
         </div>
-
-        <div class="control-buttons">
-          <button id="memoryStart" type="button">Start</button>
-          <button id="memoryRestart" type="button" class="secondary">Neustart</button>
-        </div>
-
-        <div class="memory-status" id="memoryStatus" aria-live="polite">Stelle den Modus ein und starte das Spiel.</div>
-
-        <div id="memoryScoreboard" class="memory-scoreboard" aria-live="polite"></div>
-
-        <div id="memoryGrid" class="memory-grid" aria-live="polite" aria-label="Memo Spielfeld"></div>
       </div>
     </section>
   </main>

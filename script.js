@@ -595,9 +595,7 @@ function buildMemoryDeck(pairCount) {
 
 function buildMemoryGrid() {
   memoryGrid.innerHTML = "";
-  const cardCount = memoryState.deck.length;
-  const columns = Math.min(6, Math.max(4, Math.ceil(cardCount / 2)));
-  memoryGrid.style.gridTemplateColumns = `repeat(${columns}, minmax(80px, 1fr))`;
+  memoryGrid.style.removeProperty("grid-template-columns");
   memoryState.deck.forEach((cardData, index) => {
     const cardButton = document.createElement("button");
     cardButton.type = "button";
