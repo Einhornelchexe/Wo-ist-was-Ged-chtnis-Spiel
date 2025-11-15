@@ -15,12 +15,12 @@ body {
 }
 
 .layout {
-  max-width: 1100px;
+  width: min(1600px, 100%);
   margin: 0 auto;
-  padding: 32px 16px 56px;
+  padding: 32px clamp(16px, 3vw, 56px) 56px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 32px;
 }
 
 .hero {
@@ -238,10 +238,32 @@ button.active {
   border-color: #4c63b6;
 }
 
+.memory-panel {
+  padding: clamp(24px, 3vw, 40px);
+}
+
+.memory-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: clamp(20px, 4vw, 48px);
+  align-items: start;
+}
+
+.memory-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 24px;
+}
+
+.memory-heading h2 {
+  margin-bottom: 6px;
+}
+
 .memory-settings {
   display: grid;
   gap: 18px;
-  margin-bottom: 16px;
 }
 
 .memory-mode {
@@ -290,7 +312,6 @@ button.active {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 16px;
 }
 
 .memory-scoreboard .player {
@@ -317,20 +338,26 @@ button.active {
   font-weight: 700;
 }
 
+.memory-playfield {
+  width: 100%;
+}
+
 .memory-grid {
   display: grid;
-  gap: 12px;
-  justify-items: center;
+  gap: clamp(16px, 2vw, 32px);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
 }
 
 .memory-card {
-  width: 120px;
-  height: 140px;
+  width: 100%;
+  aspect-ratio: 5 / 6;
+  height: auto;
   perspective: 800px;
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
+  display: block;
 }
 
 .memory-card-inner {
@@ -397,5 +424,15 @@ button.active {
   #memoryScoreboard,
   #memoryStatus {
     grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  .memory-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .memory-sidebar {
+    position: static;
   }
 }
