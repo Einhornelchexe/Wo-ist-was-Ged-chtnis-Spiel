@@ -1,0 +1,160 @@
+:root {
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  color: #1f2933;
+  background-color: #f5f7fa;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: inherit;
+}
+
+.layout {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  display: grid;
+  gap: 20px;
+}
+
+header {
+  text-align: center;
+}
+
+h1 {
+  font-size: 2.4rem;
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  margin-top: 0;
+  color: #52606d;
+  font-size: 1.1rem;
+}
+
+.panel {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 8px rgba(31, 41, 51, 0.1);
+}
+
+.panel h2 {
+  margin-top: 0;
+  font-size: 1.4rem;
+}
+
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+button {
+  font-size: 1.1rem;
+  padding: 14px 20px;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-color: #e1efff;
+  color: #102a43;
+  cursor: pointer;
+  min-width: 120px;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+button:not(:disabled):hover,
+button.active {
+  background-color: #bfd7ff;
+  border-color: #4c63b6;
+}
+
+.control-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.status-text {
+  font-size: 1.1rem;
+  margin: 8px 0 0;
+  min-height: 1.4em;
+}
+
+.grid {
+  display: grid;
+  gap: 10px;
+  justify-content: center;
+}
+
+.cell {
+  min-width: 90px;
+  min-height: 90px;
+  border-radius: 12px;
+  border: 2px solid #cbd2d9;
+  background-color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+.cell.memorize {
+  background-color: #fff4e6;
+}
+
+.cell.recall {
+  background-color: #e6fffa;
+}
+
+.cell.correct {
+  border-color: #2f9e44;
+  background-color: #ebfbee;
+  color: #1b4332;
+}
+
+.cell.wrong {
+  border-color: #d64545;
+  background-color: #fde2e2;
+  color: #781c2e;
+}
+
+#items {
+  min-height: 60px;
+}
+
+#items button {
+  flex: 1 1 140px;
+}
+
+#items button.placed {
+  background-color: #d9f2ff;
+  border-color: #4c63b6;
+}
+
+@media (min-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  header {
+    grid-column: 1 / -1;
+  }
+
+  #controls {
+    grid-column: 1 / -1;
+  }
+
+  #items {
+    justify-content: flex-start;
+  }
+}

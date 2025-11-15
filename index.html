@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wo liegt was?</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="layout">
+    <header>
+      <h1>Wo liegt was?</h1>
+      <p class="subtitle">Gedächtnistraining mit vertrauten Räumen</p>
+    </header>
+
+    <section class="panel" aria-labelledby="raumwahl">
+      <h2 id="raumwahl">Raum auswählen</h2>
+      <div id="roomButtons" class="button-group" role="group" aria-label="Räume"></div>
+    </section>
+
+    <section class="panel" id="controls" aria-labelledby="steuerung">
+      <h2 id="steuerung">Steuerung</h2>
+      <div class="control-buttons">
+        <button id="startMemorize" type="button" disabled>Merken starten</button>
+        <button id="startRecall" type="button" disabled>Zur Erinnerung wechseln</button>
+        <button id="resetGame" type="button">Neustart</button>
+      </div>
+      <p id="timer" class="status-text" aria-live="polite"></p>
+      <p id="message" class="status-text" aria-live="polite">Wähle zuerst einen Raum aus.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="spielfeld">
+      <h2 id="spielfeld">Spielfeld</h2>
+      <div id="grid" class="grid" role="grid" aria-live="polite"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="gegenstaende">
+      <h2 id="gegenstaende">Gegenstände</h2>
+      <div id="items" class="button-group" role="group" aria-label="Gegenstände"></div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
