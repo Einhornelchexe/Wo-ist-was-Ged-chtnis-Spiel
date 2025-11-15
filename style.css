@@ -344,12 +344,13 @@ button.active {
 
 .memory-grid {
   display: grid;
-  gap: clamp(16px, 2vw, 32px);
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  justify-items: center;
 }
 
 .memory-card {
-  width: 100%;
+  width: min(130px, 100%);
   aspect-ratio: 5 / 6;
   height: auto;
   perspective: 800px;
