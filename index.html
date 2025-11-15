@@ -8,55 +8,108 @@
 </head>
 <body>
   <main class="layout">
-    <header>
-      <h1>Wo liegt was?</h1>
-      <p class="subtitle">Gedächtnistraining mit vertrauten Räumen</p>
+    <header class="hero">
+      <p class="eyebrow">Gedächtnisspiele</p>
+      <h1>Dein Trainingsplatz für starke Erinnerungen</h1>
+      <p class="subtitle">Wähle zwischen zwei Modi und trainiere Konzentration und Gedächtnis.</p>
+      <div class="game-tabs" role="tablist">
+        <button id="tab-spatial" class="game-tab active" type="button" role="tab" aria-selected="true" aria-controls="spatialGame" data-target="spatialGame">Was liegt wo?</button>
+        <button id="tab-memory" class="game-tab" type="button" role="tab" aria-selected="false" aria-controls="memoryGame" data-target="memoryGame">Memo-Match</button>
+      </div>
     </header>
 
-    <section class="panel" aria-labelledby="raumwahl">
-      <h2 id="raumwahl">Raum auswählen</h2>
-      <div id="roomButtons" class="button-group" role="group" aria-label="Räume"></div>
-    </section>
-
-    <section class="panel" id="controls" aria-labelledby="steuerung">
-      <h2 id="steuerung">Steuerung</h2>
-      <div class="settings-grid">
-        <label class="setting" for="itemCount">
-          <span>Anzahl der Gegenstände</span>
-          <select id="itemCount">
-            <option value="3">3 Gegenstände</option>
-            <option value="4" selected>4 Gegenstände</option>
-            <option value="5">5 Gegenstände</option>
-            <option value="6">6 Gegenstände</option>
-          </select>
-        </label>
-        <label class="setting" for="memorizeDuration">
-          <span>Bedenkzeit</span>
-          <select id="memorizeDuration">
-            <option value="10">10 Sekunden</option>
-            <option value="15" selected>15 Sekunden</option>
-            <option value="20">20 Sekunden</option>
-            <option value="30">30 Sekunden</option>
-          </select>
-        </label>
+    <section id="spatialGame" class="game-section active" role="tabpanel" aria-labelledby="tab-spatial">
+      <div class="panel" aria-labelledby="raumwahl">
+        <h2 id="raumwahl">Raum auswählen</h2>
+        <div id="roomButtons" class="button-group" role="group" aria-label="Räume"></div>
       </div>
-      <div class="control-buttons">
-        <button id="startMemorize" type="button" disabled>Merken starten</button>
-        <button id="startRecall" type="button" disabled>Zur Erinnerung wechseln</button>
-        <button id="resetGame" type="button">Neustart</button>
+
+      <div class="panel" id="controls" aria-labelledby="steuerung">
+        <h2 id="steuerung">Steuerung</h2>
+        <div class="settings-grid">
+          <label class="setting" for="itemCount">
+            <span>Anzahl der Gegenstände</span>
+            <select id="itemCount">
+              <option value="3">3 Gegenstände</option>
+              <option value="4" selected>4 Gegenstände</option>
+              <option value="5">5 Gegenstände</option>
+              <option value="6">6 Gegenstände</option>
+            </select>
+          </label>
+          <label class="setting" for="memorizeDuration">
+            <span>Bedenkzeit</span>
+            <select id="memorizeDuration">
+              <option value="10">10 Sekunden</option>
+              <option value="15" selected>15 Sekunden</option>
+              <option value="20">20 Sekunden</option>
+              <option value="30">30 Sekunden</option>
+            </select>
+          </label>
+        </div>
+        <div class="control-buttons">
+          <button id="startMemorize" type="button" disabled>Merken starten</button>
+          <button id="startRecall" type="button" disabled>Zur Erinnerung wechseln</button>
+          <button id="resetGame" type="button">Neustart</button>
+        </div>
+        <p id="timer" class="status-text" aria-live="polite"></p>
+        <p id="message" class="status-text" aria-live="polite">Wähle zuerst einen Raum aus.</p>
       </div>
-      <p id="timer" class="status-text" aria-live="polite"></p>
-      <p id="message" class="status-text" aria-live="polite">Wähle zuerst einen Raum aus.</p>
+
+      <div class="panel" aria-labelledby="spielfeld">
+        <h2 id="spielfeld">Spielfeld</h2>
+        <div id="grid" class="grid" role="grid" aria-live="polite"></div>
+      </div>
+
+      <div class="panel" aria-labelledby="gegenstaende">
+        <h2 id="gegenstaende">Gegenstände</h2>
+        <div id="items" class="button-group" role="group" aria-label="Gegenstände"></div>
+      </div>
     </section>
 
-    <section class="panel" aria-labelledby="spielfeld">
-      <h2 id="spielfeld">Spielfeld</h2>
-      <div id="grid" class="grid" role="grid" aria-live="polite"></div>
-    </section>
+    <section id="memoryGame" class="game-section" role="tabpanel" aria-labelledby="tab-memory" hidden>
+      <div class="panel">
+        <h2 id="memoryTitle">Memo-Match</h2>
+        <p class="subtitle">Finde die Paare – Solo oder im Duell!</p>
 
-    <section class="panel" aria-labelledby="gegenstaende">
-      <h2 id="gegenstaende">Gegenstände</h2>
-      <div id="items" class="button-group" role="group" aria-label="Gegenstände"></div>
+        <div class="memory-settings">
+          <div class="memory-mode" role="group" aria-labelledby="memoryModeLabel">
+            <span id="memoryModeLabel">Modus</span>
+            <label>
+              <input type="radio" name="memoryMode" value="solo" checked>
+              Solo
+            </label>
+            <label>
+              <input type="radio" name="memoryMode" value="duel">
+              1 vs 1
+            </label>
+          </div>
+
+          <div class="memory-players">
+            <label for="playerOneName">Spieler 1</label>
+            <input id="playerOneName" type="text" placeholder="Name Spieler 1" value="Spieler 1">
+
+            <label for="playerTwoName" class="player-two">Spieler 2</label>
+            <input id="playerTwoName" type="text" placeholder="Name Spieler 2" value="Spieler 2" class="player-two">
+          </div>
+
+          <label class="memory-pairs" for="memoryPairs">
+            <span>Paare</span>
+            <input id="memoryPairs" type="range" min="4" max="12" value="6">
+            <output id="memoryPairValue" for="memoryPairs">6 Paare</output>
+          </label>
+        </div>
+
+        <div class="control-buttons">
+          <button id="memoryStart" type="button">Start</button>
+          <button id="memoryRestart" type="button" class="secondary">Neustart</button>
+        </div>
+
+        <div class="memory-status" id="memoryStatus" aria-live="polite">Stelle den Modus ein und starte das Spiel.</div>
+
+        <div id="memoryScoreboard" class="memory-scoreboard" aria-live="polite"></div>
+
+        <div id="memoryGrid" class="memory-grid" aria-live="polite" aria-label="Memo Spielfeld"></div>
+      </div>
     </section>
   </main>
 

@@ -46,6 +46,8 @@ let roundTargets = {};
 let selectedItemCount = DEFAULT_ITEM_COUNT;
 let memorizeDuration = DEFAULT_MEMORIZE_DURATION;
 
+const tabs = document.querySelectorAll(".game-tab");
+const sections = document.querySelectorAll(".game-section");
 const roomButtonsContainer = document.getElementById("roomButtons");
 const startMemorizeButton = document.getElementById("startMemorize");
 const startRecallButton = document.getElementById("startRecall");
@@ -57,7 +59,31 @@ const timerElement = document.getElementById("timer");
 const itemCountSelect = document.getElementById("itemCount");
 const memorizeDurationSelect = document.getElementById("memorizeDuration");
 
-function init() {
+function initPage() {
+  initTabs();
+  initSpatialGame();
+  initMemoryGame();
+}
+
+function initTabs() {
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const target = tab.dataset.target;
+      tabs.forEach((button) => {
+        const isActive = button === tab;
+        button.classList.toggle("active", isActive);
+        button.setAttribute("aria-selected", String(isActive));
+      });
+      sections.forEach((section) => {
+        const isTarget = section.id === target;
+        section.classList.toggle("active", isTarget);
+        section.hidden = !isTarget;
+      });
+    });
+  });
+}
+
+function initSpatialGame() {
   buildRoomButtons();
   startMemorizeButton.addEventListener("click", handleStartMemorize);
   startRecallButton.addEventListener("click", startRecall);
@@ -442,4 +468,287 @@ function shuffleArray(array) {
   return array;
 }
 
-init();
+const memoryIcons = rooms.flatMap((room) => room.items);
+const MEMORY_MIN_PAIRS = 4;
+const MEMORY_MAX_PAIRS = 12;
+const memoryGrid = document.getElementById("memoryGrid");
+const memoryStatus = document.getElementById("memoryStatus");
+const memoryScoreboard = document.getElementById("memoryScoreboard");
+const memoryStartButton = document.getElementById("memoryStart");
+const memoryRestartButton = document.getElementById("memoryRestart");
+const memoryPairsInput = document.getElementById("memoryPairs");
+const memoryPairsOutput = document.getElementById("memoryPairValue");
+const memoryModeRadios = document.querySelectorAll("input[name='memoryMode']");
+const playerOneInput = document.getElementById("playerOneName");
+const playerTwoInput = document.getElementById("playerTwoName");
+
+const memoryState = {
+  mode: "solo",
+  pairCount: Number(memoryPairsInput?.value ?? MEMORY_MIN_PAIRS),
+  players: [
+    { name: "Spieler 1", score: 0 },
+    { name: "Spieler 2", score: 0 }
+  ],
+  deck: [],
+  revealedCards: [],
+  matchedPairs: new Set(),
+  activePlayerIndex: 0,
+  blockInput: false,
+  previewTimer: null,
+  flipTimer: null,
+  started: false
+};
+
+function initMemoryGame() {
+  if (!memoryGrid) {
+    return;
+  }
+  memoryPairsInput.addEventListener("input", handlePairsChange);
+  memoryModeRadios.forEach((radio) => radio.addEventListener("change", handleModeChange));
+  memoryStartButton.addEventListener("click", startMemoryRound);
+  memoryRestartButton.addEventListener("click", resetMemoryRound);
+  [playerOneInput, playerTwoInput].forEach((input, index) => {
+    input.addEventListener("input", () => handleNameChange(index));
+  });
+  updatePlayerInputVisibility();
+  renderMemoryScoreboard();
+  handlePairsChange();
+}
+
+function handlePairsChange() {
+  const count = Number(memoryPairsInput.value);
+  memoryState.pairCount = Math.min(Math.max(count, MEMORY_MIN_PAIRS), MEMORY_MAX_PAIRS);
+  memoryPairsOutput.value = `${memoryState.pairCount} Paare`;
+}
+
+function handleModeChange() {
+  const selected = document.querySelector("input[name='memoryMode']:checked");
+  memoryState.mode = selected?.value === "duel" ? "duel" : "solo";
+  updatePlayerInputVisibility();
+  renderMemoryScoreboard();
+  updateTurnMessage();
+}
+
+function handleNameChange(index) {
+  const value = index === 0 ? playerOneInput.value : playerTwoInput.value;
+  memoryState.players[index].name = value.trim() || `Spieler ${index + 1}`;
+  renderMemoryScoreboard();
+  updateTurnMessage();
+}
+
+function updatePlayerInputVisibility() {
+  const showSecond = memoryState.mode === "duel";
+  [playerTwoInput, document.querySelector("label[for='playerTwoName']")].forEach((element) => {
+    if (element) {
+      element.classList.toggle("hide", !showSecond);
+    }
+  });
+}
+
+function startMemoryRound() {
+  clearMemoryTimers();
+  memoryState.players[0].name = playerOneInput.value.trim() || "Spieler 1";
+  memoryState.players[1].name = playerTwoInput.value.trim() || "Spieler 2";
+  memoryState.players.forEach((player) => {
+    player.score = 0;
+  });
+  memoryState.matchedPairs = new Set();
+  memoryState.revealedCards = [];
+  memoryState.activePlayerIndex = memoryState.mode === "duel" ? Math.floor(Math.random() * 2) : 0;
+  memoryState.deck = buildMemoryDeck(memoryState.pairCount);
+  memoryState.blockInput = true;
+  memoryState.started = true;
+  buildMemoryGrid();
+  renderMemoryScoreboard();
+  memoryStatus.textContent = "Alle Karten werden kurz angezeigt – präge sie dir gut ein!";
+  peekCards();
+}
+
+function resetMemoryRound() {
+  clearMemoryTimers();
+  memoryState.deck = [];
+  memoryState.revealedCards = [];
+  memoryState.matchedPairs = new Set();
+  memoryState.blockInput = false;
+  memoryState.activePlayerIndex = 0;
+  memoryState.started = false;
+  memoryGrid.innerHTML = "";
+  renderMemoryScoreboard();
+  memoryStatus.textContent = "Stelle den Modus ein und starte das Spiel.";
+}
+
+function clearMemoryTimers() {
+  clearTimeout(memoryState.previewTimer);
+  clearTimeout(memoryState.flipTimer);
+}
+
+function buildMemoryDeck(pairCount) {
+  const availableIcons = shuffleArray([...memoryIcons]).slice(0, pairCount);
+  const deck = [];
+  availableIcons.forEach((icon, index) => {
+    const first = { ...icon, pairId: `pair-${index}` };
+    const second = { ...icon, pairId: `pair-${index}` };
+    deck.push(first, second);
+  });
+  return shuffleArray(deck);
+}
+
+function buildMemoryGrid() {
+  memoryGrid.innerHTML = "";
+  const cardCount = memoryState.deck.length;
+  const columns = Math.min(6, Math.max(4, Math.ceil(cardCount / 2)));
+  memoryGrid.style.gridTemplateColumns = `repeat(${columns}, minmax(140px, 1fr))`;
+  memoryState.deck.forEach((cardData, index) => {
+    const cardButton = document.createElement("button");
+    cardButton.type = "button";
+    cardButton.classList.add("memory-card", "peek");
+    cardButton.dataset.index = String(index);
+    cardButton.dataset.pair = cardData.pairId;
+    cardButton.addEventListener("click", () => handleCardClick(cardButton, cardData));
+
+    const inner = document.createElement("div");
+    inner.classList.add("memory-card-inner");
+
+    const front = document.createElement("div");
+    front.classList.add("memory-card-face", "memory-card-front");
+
+    const back = document.createElement("div");
+    back.classList.add("memory-card-face", "memory-card-back");
+    const img = document.createElement("img");
+    img.src = cardData.icon;
+    img.alt = cardData.name;
+    back.appendChild(img);
+
+    inner.appendChild(front);
+    inner.appendChild(back);
+    cardButton.appendChild(inner);
+    memoryGrid.appendChild(cardButton);
+  });
+}
+
+function peekCards() {
+  memoryState.previewTimer = setTimeout(() => {
+    const cards = memoryGrid.querySelectorAll(".memory-card");
+    cards.forEach((card) => {
+      card.classList.remove("peek");
+      card.classList.remove("revealed");
+    });
+    memoryState.blockInput = false;
+    updateTurnMessage();
+  }, 5000);
+}
+
+function handleCardClick(card, cardData) {
+  if (memoryState.blockInput || card.classList.contains("revealed") || card.classList.contains("matched")) {
+    return;
+  }
+  card.classList.add("revealed");
+  memoryState.revealedCards.push({ card, data: cardData });
+
+  if (memoryState.revealedCards.length === 2) {
+    memoryState.blockInput = true;
+    const [first, second] = memoryState.revealedCards;
+    if (first.data.pairId === second.data.pairId) {
+      registerMatch(first.card, second.card);
+    } else {
+      memoryState.flipTimer = setTimeout(() => {
+        first.card.classList.remove("revealed");
+        second.card.classList.remove("revealed");
+        memoryState.revealedCards = [];
+        memoryState.blockInput = false;
+        advancePlayer();
+      }, 900);
+    }
+  }
+}
+
+function registerMatch(firstCard, secondCard) {
+  memoryState.revealedCards = [];
+  memoryState.matchedPairs.add(firstCard.dataset.pair);
+  firstCard.classList.add("matched");
+  secondCard.classList.add("matched");
+  setTimeout(() => {
+    firstCard.classList.add("gone");
+    secondCard.classList.add("gone");
+  }, 400);
+
+  if (memoryState.mode === "duel") {
+    memoryState.players[memoryState.activePlayerIndex].score += 1;
+  }
+  renderMemoryScoreboard();
+
+  if (memoryState.matchedPairs.size === memoryState.pairCount) {
+    finishMemoryRound();
+  } else {
+    memoryState.blockInput = false;
+    updateTurnMessage();
+  }
+}
+
+function advancePlayer() {
+  if (memoryState.mode === "duel") {
+    memoryState.activePlayerIndex = memoryState.activePlayerIndex === 0 ? 1 : 0;
+  }
+  updateTurnMessage();
+}
+
+function updateTurnMessage() {
+  if (!memoryState.started) {
+    memoryStatus.textContent = "Stelle den Modus ein und starte das Spiel.";
+    return;
+  }
+  if (memoryState.mode === "solo") {
+    const found = memoryState.matchedPairs.size;
+    memoryStatus.textContent = `Finde alle Paare (${found}/${memoryState.pairCount})!`;
+  } else {
+    const activePlayer = memoryState.players[memoryState.activePlayerIndex];
+    memoryStatus.textContent = `${activePlayer.name} ist am Zug.`;
+  }
+  highlightActivePlayer();
+}
+
+function highlightActivePlayer() {
+  const playerElements = memoryScoreboard.querySelectorAll(".player");
+  playerElements.forEach((element, index) => {
+    element.classList.toggle("active", memoryState.mode === "duel" && index === memoryState.activePlayerIndex);
+  });
+}
+
+function finishMemoryRound() {
+  memoryState.blockInput = true;
+  if (memoryState.mode === "solo") {
+    memoryStatus.textContent = "Geschafft! Alle Paare wurden gefunden.";
+  } else {
+    const [first, second] = memoryState.players;
+    if (first.score === second.score) {
+      memoryStatus.textContent = "Unentschieden! Ihr seid ein eingespieltes Team.";
+    } else {
+      const winner = first.score > second.score ? first : second;
+      memoryStatus.textContent = `${winner.name} gewinnt mit ${winner.score} Paaren!`;
+    }
+  }
+}
+
+function renderMemoryScoreboard() {
+  memoryScoreboard.innerHTML = "";
+  const showSecond = memoryState.mode === "duel";
+  memoryState.players.forEach((player, index) => {
+    if (!showSecond && index === 1) {
+      return;
+    }
+    const playerCard = document.createElement("div");
+    playerCard.classList.add("player");
+    const name = document.createElement("div");
+    name.classList.add("name");
+    name.textContent = player.name;
+    const score = document.createElement("div");
+    score.classList.add("score");
+    score.textContent = memoryState.mode === "solo" ? memoryState.matchedPairs.size : player.score;
+    playerCard.appendChild(name);
+    playerCard.appendChild(score);
+    memoryScoreboard.appendChild(playerCard);
+  });
+  highlightActivePlayer();
+}
+
+initPage();
