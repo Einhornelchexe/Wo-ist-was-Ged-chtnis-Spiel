@@ -420,6 +420,7 @@ button.active {
   display: none;
 }
 
+/* Desktop-Layout */
 @media (min-width: 960px) {
   .game-section {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -432,8 +433,14 @@ button.active {
   #memoryStatus {
     grid-column: 1 / -1;
   }
+
+  /* Memo-Match: nutzt die ganze Breite der Sektion (eine Spalte statt zwei) */
+  #memoryGame {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
+/* Memo-Match: einspaltig auf kleineren Screens bleibt wie vorher */
 @media (max-width: 900px) {
   .memory-layout {
     grid-template-columns: 1fr;
@@ -442,65 +449,4 @@ button.active {
   .memory-sidebar {
     position: static;
   }
-}
-/* --- Memo-Match: volle Fensterbreite & kein Überlappen --- */
-
-/* bricht den Memo-Bereich aus einem zentrierten Layout raus */
-#memoryGame {
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
-  margin-right: calc(50% - 50vw);
-}
-
-/* Panel darf voll breit werden */
-#memoryGame .memory-panel {
-  max-width: none;
-  padding-inline: clamp(1rem, 3vw, 2.5rem);
-}
-
-/* Sidebar links, Spielfeld rechts, nutzt die ganze Breite */
-#memoryGame .memory-layout {
-  display: grid;
-  grid-template-columns: minmax(260px, 320px) 1fr;
-  gap: 1.5rem;
-  align-items: flex-start;
-}
-
-@media (max-width: 900px) {
-  #memoryGame .memory-layout {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Spielfeld darf komplett laufen */
-#memoryGame .memory-playfield {
-  width: 100%;
-}
-
-/* Karten-Grid: responsive, keine Überlappung mehr */
-#memoryGame .memory-grid {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  gap: 0.75rem;
-  justify-items: center;
-}
-
-/* Falls Karten bisher absolut positioniert waren → neutralisieren */
-#memoryGame .memory-grid > * {
-  position: static !important;
-  width: 100%;
-  max-width: 120px;
-  aspect-ratio: 3 / 4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Bilder innerhalb der Karten sauber einpassen */
-#memoryGame .memory-grid img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  display: block;
 }
