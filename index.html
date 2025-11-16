@@ -11,10 +11,11 @@
     <header class="hero">
       <p class="eyebrow">Gedächtnisspiele</p>
       <h1>Dein Trainingsplatz für starke Erinnerungen</h1>
-      <p class="subtitle">Wähle zwischen zwei Modi und trainiere Konzentration und Gedächtnis.</p>
+      <p class="subtitle">Wähle zwischen drei Modi und trainiere Konzentration und Gedächtnis.</p>
       <div class="game-tabs" role="tablist">
         <button id="tab-spatial" class="game-tab active" type="button" role="tab" aria-selected="true" aria-controls="spatialGame" data-target="spatialGame">Was liegt wo?</button>
         <button id="tab-memory" class="game-tab" type="button" role="tab" aria-selected="false" aria-controls="memoryGame" data-target="memoryGame">Memo-Match</button>
+        <button id="tab-words" class="game-tab" type="button" role="tab" aria-selected="false" aria-controls="wordGame" data-target="wordGame">Wortliste</button>
       </div>
     </header>
 
@@ -115,6 +116,39 @@
 
           <div class="memory-playfield" aria-live="polite">
             <div id="memoryGrid" class="memory-grid" aria-live="polite" aria-label="Memo Spielfeld"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="wordGame" class="game-section" role="tabpanel" aria-labelledby="tab-words" hidden>
+      <div class="panel word-game-panel">
+        <div class="word-game-layout">
+          <div class="word-game-sidebar">
+            <h2>Wortliste merken</h2>
+            <p class="subtitle">Merke dir eine Liste von Wörtern und schreibe sie danach aus dem Gedächtnis auf.</p>
+
+            <div class="form-row">
+              <label for="wordCountSelect">Anzahl der Wörter</label>
+              <select id="wordCountSelect"></select>
+            </div>
+
+            <div id="wordPreview" class="word-preview" aria-live="polite"></div>
+
+            <div class="button-row">
+              <button id="wordNewRoundButton" type="button">Neue Wörter</button>
+              <button id="wordStartButton" type="button">Start</button>
+            </div>
+          </div>
+
+          <div class="word-game-main">
+            <div id="wordInputArea" class="word-input-area" hidden>
+              <p>Schreibe die zuvor gezeigten Wörter auf (Reihenfolge egal):</p>
+              <div id="wordInputs" class="word-inputs"></div>
+              <button id="wordFinishButton" type="button">Fertig</button>
+            </div>
+
+            <div id="wordResult" class="word-result" aria-live="polite"></div>
           </div>
         </div>
       </div>
