@@ -32,6 +32,19 @@ const ITEM_COUNT_MAX = 6;
 const DEFAULT_ITEM_COUNT = 4;
 const DEFAULT_MEMORIZE_DURATION = 15;
 
+const WORD_POOL = [
+  "Haus", "Baum", "Auto", "Lampe", "Stuhl", "Tisch", "Fenster", "Buch", "Brille", "Computer",
+  "Garten", "Straße", "Fluss", "Berg", "Schule", "Tür", "Telefon", "Uhr", "Bild", "Koffer",
+  "Zeitung", "Blume", "Zug", "Bus", "Fahrrad", "Küche", "Teller", "Gabel", "Löffel", "Pfanne",
+  "Tasse", "Becher", "Glas", "Karte", "Stadt", "Dorf", "Insel", "Wolke", "Sonne", "Mond",
+  "Stern", "Kerze", "Spiegel", "Teppich", "Boden", "Decke", "Vorhang", "Kissen", "Schrank", "Regal",
+  "Fensterbank", "Pflanze", "Sofa", "Stift", "Papier", "Tasche", "Rucksack", "Ball", "Puppe", "Spielzeug",
+  "Trommel", "Gitarre", "Klavier", "Geige", "Trompete", "Bildschirm", "Tastatur", "Maus", "Drucker", "Lautsprecher",
+  "Kabel", "Kamera", "Fotoapparat", "Kopfhörer", "Mikrofon", "Notizbuch", "Kalender", "Ordner", "Heft", "Lineal",
+  "Zirkel", "Radiergummi", "Pinsel", "Farbe", "Leinwand", "Staffelei", "Schraube", "Hammer", "Zange", "Schraubenzieher",
+  "Bohrer", "Leiter", "Eimer", "Besen", "Schwamm", "Seife", "Handtuch", "Kamm", "Bürste", "Seil"
+];
+
 let phase = "idle";
 let selectedRoomIndex = null;
 let placements = {};
@@ -58,11 +71,27 @@ const messageElement = document.getElementById("message");
 const timerElement = document.getElementById("timer");
 const itemCountSelect = document.getElementById("itemCount");
 const memorizeDurationSelect = document.getElementById("memorizeDuration");
+const wordGameSection = document.getElementById("wordGame");
+const wordCountSelect = document.getElementById("wordCountSelect");
+const wordPreview = document.getElementById("wordPreview");
+const wordNewRoundButton = document.getElementById("wordNewRoundButton");
+const wordStartButton = document.getElementById("wordStartButton");
+const wordInputArea = document.getElementById("wordInputArea");
+const wordInputsContainer = document.getElementById("wordInputs");
+const wordFinishButton = document.getElementById("wordFinishButton");
+const wordResult = document.getElementById("wordResult");
+
+const wordGameState = {
+  targetWords: [],
+  expectedCount: 5,
+  finished: false
+};
 
 function initPage() {
   initTabs();
   initSpatialGame();
   initMemoryGame();
+  initWordGame();
 }
 
 function initTabs() {
@@ -91,6 +120,193 @@ function initSpatialGame() {
   itemCountSelect.addEventListener("change", handleItemCountChange);
   memorizeDurationSelect.addEventListener("change", handleMemorizeDurationChange);
   updateControls();
+}
+
+function initWordGame() {
+  if (
+    !wordGameSection ||
+    !wordCountSelect ||
+    !wordPreview ||
+    !wordNewRoundButton ||
+    !wordStartButton ||
+    !wordInputArea ||
+    !wordInputsContainer ||
+    !wordFinishButton ||
+    !wordResult
+  ) {
+    return;
+  }
+
+  wordCountSelect.innerHTML = "";
+  for (let n = 3; n <= 10; n += 1) {
+    const option = document.createElement("option");
+    option.value = String(n);
+    option.textContent = `${n} Wörter`;
+    if (n === 5) {
+      option.selected = true;
+    }
+    wordCountSelect.appendChild(option);
+  }
+
+  wordCountSelect.addEventListener("change", prepareWordRound);
+  wordNewRoundButton.addEventListener("click", prepareWordRound);
+  wordStartButton.addEventListener("click", startWordRound);
+  wordFinishButton.addEventListener("click", () => finishWordRound(false));
+
+  prepareWordRound();
+}
+
+function prepareWordRound() {
+  if (!wordCountSelect || !wordPreview || !wordInputArea || !wordInputsContainer || !wordResult) {
+    return;
+  }
+  const count = parseInt(wordCountSelect.value, 10) || 5;
+  wordGameState.expectedCount = count;
+  wordGameState.finished = false;
+
+  const poolCopy = [...WORD_POOL];
+  shuffleArray(poolCopy);
+  wordGameState.targetWords = poolCopy.slice(0, count);
+
+  wordPreview.innerHTML = "";
+  const list = document.createElement("ul");
+  list.classList.add("word-list");
+  wordGameState.targetWords.forEach((word) => {
+    const li = document.createElement("li");
+    li.textContent = word;
+    list.appendChild(li);
+  });
+  wordPreview.appendChild(list);
+
+  wordInputArea.hidden = true;
+  wordInputsContainer.innerHTML = "";
+  wordResult.innerHTML = "";
+}
+
+function startWordRound() {
+  if (!wordPreview || !wordInputArea || !wordInputsContainer || !wordResult) {
+    return;
+  }
+  if (!wordGameState.targetWords.length) {
+    prepareWordRound();
+  }
+
+  wordPreview.innerHTML = "<p>Die Wörter sind jetzt ausgeblendet. Schreibe sie aus dem Gedächtnis auf.</p>";
+
+  buildWordInputs(wordGameState.expectedCount);
+  wordInputArea.hidden = false;
+  wordResult.innerHTML = "";
+  wordGameState.finished = false;
+}
+
+function buildWordInputs(count) {
+  if (!wordInputsContainer) {
+    return;
+  }
+  wordInputsContainer.innerHTML = "";
+  for (let i = 0; i < count; i += 1) {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.autocomplete = "off";
+    input.spellcheck = false;
+    input.placeholder = `Wort ${i + 1}`;
+    input.addEventListener("input", handleWordInputChange);
+    wordInputsContainer.appendChild(input);
+  }
+  const first = wordInputsContainer.querySelector("input");
+  if (first) {
+    first.focus();
+  }
+}
+
+function handleWordInputChange() {
+  if (wordGameState.finished) {
+    return;
+  }
+  const inputs = Array.from(wordInputsContainer.querySelectorAll("input"));
+  const nonEmptyCount = inputs.filter((input) => input.value.trim() !== "").length;
+  if (nonEmptyCount >= wordGameState.expectedCount) {
+    finishWordRound(true);
+  }
+}
+
+function finishWordRound(autoTriggered = false) {
+  if (wordGameState.finished || !wordInputsContainer || !wordResult) {
+    return;
+  }
+  wordGameState.finished = true;
+
+  const inputs = Array.from(wordInputsContainer.querySelectorAll("input"));
+  const rawGuesses = inputs
+    .map((input) => input.value.trim())
+    .filter((value) => value !== "");
+  const guesses = rawGuesses.map((value) => value.toLowerCase());
+
+  const normalizedTargets = wordGameState.targetWords.map((word) => word.toLowerCase());
+
+  const hits = [];
+  const extras = [];
+  const extrasNormalized = [];
+
+  rawGuesses.forEach((raw, index) => {
+    const guess = guesses[index];
+    if (normalizedTargets.includes(guess) && !hits.includes(guess)) {
+      hits.push(guess);
+    } else if (!extrasNormalized.includes(guess)) {
+      extrasNormalized.push(guess);
+      extras.push(raw);
+    }
+  });
+
+  const missed = normalizedTargets.filter((target) => !hits.includes(target));
+  const total = normalizedTargets.length;
+
+  wordResult.innerHTML = "";
+
+  const scoreP = document.createElement("p");
+  scoreP.classList.add("word-score");
+  scoreP.textContent = `Du hast ${hits.length} von ${total} Wörtern richtig.`;
+  wordResult.appendChild(scoreP);
+
+  const list = document.createElement("ul");
+  list.classList.add("word-result-list");
+  wordGameState.targetWords.forEach((original) => {
+    const li = document.createElement("li");
+    const normalized = original.toLowerCase();
+    li.textContent = original;
+    if (hits.includes(normalized)) {
+      li.classList.add("hit");
+    } else {
+      li.classList.add("missed");
+    }
+    list.appendChild(li);
+  });
+  wordResult.appendChild(list);
+
+  if (missed.length > 0) {
+    const missedP = document.createElement("p");
+    const missedOriginals = wordGameState.targetWords.filter((word) => missed.includes(word.toLowerCase()));
+    missedP.textContent = `Diese Wörter haben gefehlt: ${missedOriginals.join(", ")}`;
+    wordResult.appendChild(missedP);
+  }
+
+  if (extras.length > 0) {
+    const extrasP = document.createElement("p");
+    extrasP.textContent = `Zusätzliche Wörter, die nicht in der Liste waren: ${extras.join(", ")}`;
+    wordResult.appendChild(extrasP);
+  }
+
+  if (autoTriggered) {
+    const autoP = document.createElement("p");
+    autoP.textContent = "Alle Felder gefüllt – Auswertung wurde automatisch gestartet.";
+    wordResult.appendChild(autoP);
+  }
+
+  const restartButton = document.createElement("button");
+  restartButton.type = "button";
+  restartButton.textContent = "Neustart mit neuen Wörtern";
+  restartButton.addEventListener("click", prepareWordRound);
+  wordResult.appendChild(restartButton);
 }
 
 function buildRoomButtons() {
