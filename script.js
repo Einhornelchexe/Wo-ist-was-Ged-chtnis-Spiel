@@ -223,7 +223,14 @@ function buildGrid(room, showTargets) {
       }
 
       if (phase === "recall") {
+        // Klick weiterhin erlauben
         cell.addEventListener("click", () => handleCellClick(row, col));
+
+        // Drag & Drop Events
+        cell.addEventListener("dragover", handleCellDragOver);
+        cell.addEventListener("dragenter", handleCellDragEnter);
+        cell.addEventListener("dragleave", handleCellDragLeave);
+        cell.addEventListener("drop", (event) => handleCellDrop(event, row, col));
       } else {
         cell.disabled = true;
       }
@@ -242,6 +249,11 @@ function buildItemButtons(items) {
     button.type = "button";
     button.setAttribute("aria-label", item.name);
 
+    // Drag & Drop aktivieren
+    button.draggable = true;
+    button.addEventListener("dragstart", (event) => handleItemDragStart(event, item.name));
+    button.addEventListener("dragend", handleItemDragEnd);
+
     const icon = document.createElement("img");
     icon.src = item.icon;
     icon.alt = item.name;
@@ -253,7 +265,9 @@ function buildItemButtons(items) {
     button.appendChild(icon);
     button.appendChild(label);
 
+    // Klick-Auswahl weiterhin erlauben
     button.addEventListener("click", () => selectItem(item.name));
+
     itemsContainer.appendChild(button);
     itemButtons.set(item.name, button);
   });
@@ -282,6 +296,32 @@ function updateItemSelection() {
       button.classList.remove("placed");
     }
   });
+}
+
+function handleItemDragStart(event, itemName) {
+  if (phase !== "recall") {
+    event.preventDefault();
+    return;
+  }
+
+  activeItem = itemName;
+  updateItemSelection();
+
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", itemName);
+  }
+
+  messageElement.textContent = `Platziere "${itemName}" auf dem Spielfeld.`;
+}
+
+function handleItemDragEnd() {
+  // Wenn der Drop erfolgreich war, setzt handleCellClick activeItem auf null.
+  // Wenn der Drag abgebrochen wurde, räumen wir hier auf.
+  if (phase === "recall") {
+    activeItem = null;
+    updateItemSelection();
+  }
 }
 
 function handleCellClick(row, col) {
@@ -327,6 +367,57 @@ function handleCellClick(row, col) {
   if (placedCount === totalItems) {
     evaluate();
   }
+}
+
+function handleCellDragOver(event) {
+  if (phase !== "recall") {
+    return;
+  }
+  event.preventDefault();
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = "move";
+  }
+}
+
+function handleCellDragEnter(event) {
+  if (phase !== "recall") {
+    return;
+  }
+  const cell = event.currentTarget;
+  cell.classList.add("drag-over");
+}
+
+function handleCellDragLeave(event) {
+  if (phase !== "recall") {
+    return;
+  }
+  const cell = event.currentTarget;
+  cell.classList.remove("drag-over");
+}
+
+function handleCellDrop(event, row, col) {
+  if (phase !== "recall") {
+    return;
+  }
+  event.preventDefault();
+  const cell = event.currentTarget;
+  cell.classList.remove("drag-over");
+
+  let itemName = "";
+  if (event.dataTransfer) {
+    itemName = event.dataTransfer.getData("text/plain");
+  }
+
+  if (!itemName && activeItem) {
+    itemName = activeItem;
+  }
+
+  if (!itemName) {
+    return;
+  }
+
+  activeItem = itemName;
+  handleCellClick(row, col);
 }
 
 function evaluate() {

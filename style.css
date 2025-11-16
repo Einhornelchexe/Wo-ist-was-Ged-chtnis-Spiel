@@ -189,6 +189,11 @@ button.active {
   box-sizing: border-box;
 }
 
+.cell.drag-over {
+  outline: 3px dashed #38bdf8;
+  outline-offset: 2px;
+}
+
 .cell.memorize {
   background-color: #fff4e6;
 }
